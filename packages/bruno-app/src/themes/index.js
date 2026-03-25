@@ -1,16 +1,17 @@
-import light from './light/light';
-import lightMonochrome from './light/light-monochrome';
-import lightPastel from './light/light-pastel';
-import catppuccinLatte from './light/catppuccin-latte';
-import vscodeLight from './light/vscode';
-import dark from './dark/dark';
-import darkMonochrome from './dark/dark-monochrome';
-import darkPastel from './dark/dark-pastel';
 import catppuccinFrappe from './dark/catppuccin-frappe';
 import catppuccinMacchiato from './dark/catppuccin-macchiato';
 import catppuccinMocha from './dark/catppuccin-mocha';
+import dark from './dark/dark';
+import darkMonochrome from './dark/dark-monochrome';
+import darkPastel from './dark/dark-pastel';
 import nord from './dark/nord';
+import vesperDark from './dark/vesper';
 import vscodeDark from './dark/vscode';
+import catppuccinLatte from './light/catppuccin-latte';
+import light from './light/light';
+import lightMonochrome from './light/light-monochrome';
+import lightPastel from './light/light-pastel';
+import vscodeLight from './light/vscode';
 
 const themes = {
   light,
@@ -25,7 +26,8 @@ const themes = {
   'catppuccin-mocha': catppuccinMocha,
   nord,
   'vscode-light': vscodeLight,
-  'vscode-dark': vscodeDark
+  'vscode-dark': vscodeDark,
+  'vesper-dark': vesperDark
 };
 
 // Theme metadata for UI display
@@ -93,6 +95,11 @@ export const themeRegistry = {
   'vscode-dark': {
     id: 'vscode-dark',
     name: 'VS Code Dark',
+    mode: 'dark'
+  },
+  'vesper-dark': {
+    id: 'vesper-dark',
+    name: 'Vesper Golden',
     mode: 'dark'
   }
 };
