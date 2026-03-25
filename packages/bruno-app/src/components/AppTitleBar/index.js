@@ -1,29 +1,28 @@
-import React from 'react';
-import { IconCheck, IconChevronDown, IconFolder, IconHome, IconPin, IconPinned, IconPlus, IconDownload, IconSettings, IconMinus, IconSquare, IconX, IconCopy } from '@tabler/icons';
-import { forwardRef, useCallback, useEffect, useMemo, useState } from 'react';
+import { IconCheck, IconChevronDown, IconCopy, IconDownload, IconFolder, IconHome, IconMinus, IconPin, IconPinned, IconPlus, IconSettings, IconSquare, IconStar, IconX } from '@tabler/icons';
+import React, { forwardRef, useCallback, useEffect, useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
 import { useDispatch, useSelector } from 'react-redux';
 
+import get from 'lodash/get';
 import { savePreferences, showManageWorkspacePage, toggleSidebarCollapse } from 'providers/ReduxStore/slices/app';
 import { closeConsole, openConsole } from 'providers/ReduxStore/slices/logs';
-import { createWorkspaceWithUniqueName, openWorkspaceDialog, switchWorkspace } from 'providers/ReduxStore/slices/workspaces/actions';
-import { sortWorkspaces, toggleWorkspacePin } from 'utils/workspaces';
 import { focusTab } from 'providers/ReduxStore/slices/tabs';
-import get from 'lodash/get';
+import { createWorkspaceWithUniqueName, openWorkspaceDialog, setWorkspaceAsDefault, switchWorkspace } from 'providers/ReduxStore/slices/workspaces/actions';
+import { sortWorkspaces, toggleWorkspacePin } from 'utils/workspaces';
 
 import Bruno from 'components/Bruno';
-import MenuDropdown from 'ui/MenuDropdown';
-import ActionIcon from 'ui/ActionIcon';
 import IconSidebarToggle from 'components/Icons/IconSidebarToggle';
 import CreateWorkspace from 'components/WorkspaceSidebar/CreateWorkspace';
 import ImportWorkspace from 'components/WorkspaceSidebar/ImportWorkspace';
+import ActionIcon from 'ui/ActionIcon';
+import MenuDropdown from 'ui/MenuDropdown';
 
+import classNames from 'classnames';
 import IconBottombarToggle from 'components/Icons/IconBottombarToggle/index';
+import ResponseLayoutToggle from 'components/ResponsePane/ResponseLayoutToggle';
+import { isLinuxOS, isMacOS, isWindowsOS } from 'utils/common/platform';
 import AppMenu from './AppMenu';
 import StyledWrapper from './StyledWrapper';
-import ResponseLayoutToggle from 'components/ResponsePane/ResponseLayoutToggle';
-import { isMacOS, isWindowsOS, isLinuxOS } from 'utils/common/platform';
-import classNames from 'classnames';
 
 const getOsClass = () => {
   if (isMacOS()) return 'os-mac';
@@ -180,6 +179,16 @@ const AppTitleBar = () => {
     dispatch(savePreferences(newPreferences));
   }, [dispatch, preferences]);
 
+  const handleSetWorkspaceAsDefault = useCallback((workspaceUid, e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+      dispatch(setWorkspaceAsDefault(workspaceUid));
+    } catch (error) {
+      // Error toast is already shown in the action
+    }
+  }, [dispatch]);
+
   const handleToggleSidebar = () => {
     dispatch(toggleSidebarCollapse());
   };
@@ -197,6 +206,7 @@ const AppTitleBar = () => {
     const items = sortedWorkspaces.map((workspace) => {
       const isActive = workspace.uid === activeWorkspaceUid;
       const isPinned = preferences?.workspaces?.pinnedWorkspaceUids?.includes(workspace.uid);
+      const isDefault = workspace.type === 'default';
 
       return {
         id: workspace.uid,
@@ -205,15 +215,25 @@ const AppTitleBar = () => {
         className: `workspace-item ${isActive ? 'active' : ''}`,
         rightSection: (
           <div className="workspace-actions">
-            {workspace.type !== 'default' && (
-              <ActionIcon
-                className={`pin-btn ${isPinned ? 'pinned' : ''}`}
-                onClick={(e) => handlePinWorkspace(workspace.uid, e)}
-                label={isPinned ? 'Unpin workspace' : 'Pin workspace'}
-                size="sm"
-              >
-                {isPinned ? <IconPinned size={14} stroke={1.5} /> : <IconPin size={14} stroke={1.5} />}
-              </ActionIcon>
+            {!isDefault && (
+              <>
+                <ActionIcon
+                  className="set-default-btn"
+                  onClick={(e) => handleSetWorkspaceAsDefault(workspace.uid, e)}
+                  label="Set as default workspace"
+                  size="sm"
+                >
+                  <IconStar size={14} stroke={1.5} />
+                </ActionIcon>
+                <ActionIcon
+                  className={`pin-btn ${isPinned ? 'pinned' : ''}`}
+                  onClick={(e) => handlePinWorkspace(workspace.uid, e)}
+                  label={isPinned ? 'Unpin workspace' : 'Pin workspace'}
+                  size="sm"
+                >
+                  {isPinned ? <IconPinned size={14} stroke={1.5} /> : <IconPin size={14} stroke={1.5} />}
+                </ActionIcon>
+              </>
             )}
             {isActive && <IconCheck size={16} stroke={1.5} className="check-icon" />}
           </div>
@@ -251,7 +271,7 @@ const AppTitleBar = () => {
     );
 
     return items;
-  }, [sortedWorkspaces, activeWorkspaceUid, preferences, handlePinWorkspace, handleCreateWorkspace]);
+  }, [sortedWorkspaces, activeWorkspaceUid, preferences, handlePinWorkspace, handleSetWorkspaceAsDefault, handleCreateWorkspace]);
 
   return (
     <StyledWrapper className={`app-titlebar ${osClass} ${isFullScreen ? 'fullscreen' : ''}`}>

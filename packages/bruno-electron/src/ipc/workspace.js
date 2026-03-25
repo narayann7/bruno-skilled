@@ -52,7 +52,8 @@ const prepareWorkspaceConfigForClient = (workspaceConfig, workspacePath, isDefau
   if (isDefault) {
     return {
       ...config,
-      name: DEFAULT_WORKSPACE_NAME,
+      // Preserve the actual workspace name, only use DEFAULT_WORKSPACE_NAME if name is not set
+      name: config.name || DEFAULT_WORKSPACE_NAME,
       type: 'default'
     };
   }
@@ -635,6 +636,39 @@ const registerWorkspaceIpc = (mainWindow, workspaceWatcher) => {
     } catch (error) {
       console.error('Error getting default workspace:', error);
       return null;
+    }
+  });
+
+  ipcMain.handle('renderer:set-workspace-as-default', async (event, workspacePath) => {
+    try {
+      if (!workspacePath) {
+        throw new Error('Workspace path is required');
+      }
+
+      // Validate that the workspace exists and is valid
+      const workspaceYmlPath = path.join(workspacePath, 'workspace.yml');
+      if (!fs.existsSync(workspaceYmlPath)) {
+        throw new Error('Invalid workspace: workspace.yml not found');
+      }
+
+      try {
+        const workspaceConfig = readWorkspaceConfig(workspacePath);
+        validateWorkspaceConfig(workspaceConfig);
+      } catch (error) {
+        throw new Error(`Invalid workspace configuration: ${error.message}`);
+      }
+
+      // Set the workspace as default in preferences
+      await defaultWorkspaceManager.setDefaultWorkspacePath(workspacePath);
+
+      return {
+        success: true,
+        workspacePath,
+        message: 'Workspace set as default successfully'
+      };
+    } catch (error) {
+      console.error('Error setting workspace as default:', error);
+      throw error;
     }
   });
 

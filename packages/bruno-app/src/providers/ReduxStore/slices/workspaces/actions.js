@@ -1,21 +1,20 @@
-import path from 'utils/common/path';
+import toast from 'react-hot-toast';
+import path, { normalizePath } from 'utils/common/path';
+import { sanitizeName } from 'utils/common/regex';
+import { addTransientDirectory, removeCollection, updateCollectionMountStatus } from '../collections';
+import { createCollection, openCollection, openMultipleCollections, openScratchCollectionEvent } from '../collections/actions';
+import { updateGlobalEnvironments } from '../global-environments';
+import { clearCollectionState } from '../openapi-sync';
+import { addTab, focusTab } from '../tabs';
 import {
   createWorkspace,
+  removeCollectionFromWorkspace,
   removeWorkspace,
   setActiveWorkspace,
+  setWorkspaceScratchCollection,
   updateWorkspace,
-  removeCollectionFromWorkspace,
-  updateWorkspaceLoadingState,
-  setWorkspaceScratchCollection
+  updateWorkspaceLoadingState
 } from '../workspaces';
-import { createCollection, openCollection, openMultipleCollections, openScratchCollectionEvent } from '../collections/actions';
-import { removeCollection, addTransientDirectory, updateCollectionMountStatus } from '../collections';
-import { sanitizeName } from 'utils/common/regex';
-import { clearCollectionState } from '../openapi-sync';
-import { updateGlobalEnvironments } from '../global-environments';
-import { addTab, focusTab } from '../tabs';
-import { normalizePath } from 'utils/common/path';
-import toast from 'react-hot-toast';
 
 const { ipcRenderer } = window;
 
@@ -694,6 +693,47 @@ export const loadWorkspaceEnvironments = (workspaceUid) => {
 
       return environments;
     } catch (error) {
+      throw error;
+    }
+  };
+};
+
+export const setWorkspaceAsDefault = (workspaceUid) => {
+  return async (dispatch, getState) => {
+    try {
+      const { workspaces } = getState().workspaces;
+      const workspace = workspaces.find((w) => w.uid === workspaceUid);
+
+      if (!workspace) {
+        throw new Error('Workspace not found');
+      }
+
+      if (!workspace.pathname) {
+        throw new Error('Workspace path not found');
+      }
+
+      const result = await ipcRenderer.invoke('renderer:set-workspace-as-default', workspace.pathname);
+
+      // Update workspace type to default
+      dispatch(updateWorkspace({
+        uid: workspaceUid,
+        type: 'default'
+      }));
+
+      // Update other workspaces to remove default type
+      for (const w of workspaces) {
+        if (w.uid !== workspaceUid && w.type === 'default') {
+          dispatch(updateWorkspace({
+            uid: w.uid,
+            type: 'regular'
+          }));
+        }
+      }
+
+      toast.success('Workspace set as default successfully');
+      return result;
+    } catch (error) {
+      toast.error(error.message || 'Failed to set workspace as default');
       throw error;
     }
   };

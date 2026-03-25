@@ -1,21 +1,21 @@
-import React, { useState, useMemo } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
-import { IconArrowLeft, IconPlus, IconFolder, IconLock, IconDots, IconCategory, IconLogin } from '@tabler/icons';
+import { IconArrowLeft, IconCategory, IconDots, IconFolder, IconLock, IconLogin, IconPlus } from '@tabler/icons';
+import React, { useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
+import { useDispatch, useSelector } from 'react-redux';
 
 import get from 'lodash/get';
 import { showHomePage } from 'providers/ReduxStore/slices/app';
-import { createWorkspaceWithUniqueName, switchWorkspace } from 'providers/ReduxStore/slices/workspaces/actions';
 import { showInFolder } from 'providers/ReduxStore/slices/collections/actions';
+import { createWorkspaceWithUniqueName, setWorkspaceAsDefault, switchWorkspace } from 'providers/ReduxStore/slices/workspaces/actions';
 import { sortWorkspaces } from 'utils/workspaces';
 
 import CreateWorkspace from 'components/WorkspaceSidebar/CreateWorkspace';
-import RenameWorkspace from './RenameWorkspace';
-import DeleteWorkspace from './DeleteWorkspace';
-import StyledWrapper from './StyledWrapper';
-import MenuDropdown from 'ui/MenuDropdown/index';
 import Button from 'ui/Button';
+import MenuDropdown from 'ui/MenuDropdown/index';
 import { getRevealInFolderLabel } from 'utils/common/platform';
+import DeleteWorkspace from './DeleteWorkspace';
+import RenameWorkspace from './RenameWorkspace';
+import StyledWrapper from './StyledWrapper';
 
 const ManageWorkspace = () => {
   const dispatch = useDispatch();
@@ -59,6 +59,14 @@ const ManageWorkspace = () => {
       return;
     }
     setDeleteWorkspaceModal({ open: true, workspace });
+  };
+
+  const handleSetAsDefault = async (workspace) => {
+    try {
+      await dispatch(setWorkspaceAsDefault(workspace.uid));
+    } catch (error) {
+      // Error toast is already shown in the action
+    }
   };
 
   const handleCreateWorkspace = async () => {
@@ -157,6 +165,7 @@ const ManageWorkspace = () => {
                     <MenuDropdown
                       placement="bottom-end"
                       items={[
+                        { id: 'set-default', label: 'Set as Default', onClick: () => handleSetAsDefault(workspace) },
                         { id: 'rename', label: 'Rename', onClick: () => handleRenameClick(workspace) },
                         { id: 'remove', label: 'Remove', onClick: () => handleCloseClick(workspace) }
                       ]}
