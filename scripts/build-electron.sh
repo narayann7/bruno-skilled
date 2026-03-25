@@ -1,4 +1,13 @@
 #!/bin/bash
+set -euo pipefail
+
+# Build renderer assets first so electron can load web/index.html in production
+npm run build:web
+
+if [ ! -f packages/bruno-app/dist/index.html ]; then
+  echo "Error: packages/bruno-app/dist/index.html not found. Renderer build failed."
+  exit 1
+fi
 
 # Remove out directory
 rm -rf packages/bruno-electron/out
@@ -10,7 +19,7 @@ rm -rf packages/bruno-electron/web
 mkdir packages/bruno-electron/web
 
 # Copy build
-cp -r packages/bruno-app/dist/* packages/bruno-electron/web
+cp -R packages/bruno-app/dist/. packages/bruno-electron/web/
 
 
 # Update static paths
