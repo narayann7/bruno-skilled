@@ -1,8 +1,8 @@
 require('dotenv').config({ path: process.env.DOTENV_PATH });
 
 const config = {
-  appId: 'com.usebruno.app',
-  productName: 'Bruno',
+  appId: 'com.brunoskilled.app',
+  productName: 'Bruno Skilled',
   electronVersion: '37.6.1',
   directories: {
     buildResources: 'resources',
@@ -41,9 +41,9 @@ const config = {
     notarize: false,
     protocols: [
       {
-        name: 'Bruno',
+        name: 'Bruno Skilled',
         schemes: [
-          'bruno'
+          'bruno-skilled'
         ]
       }
     ]
@@ -67,8 +67,8 @@ const config = {
     ],
     protocols: [
       {
-        name: 'Bruno',
-        schemes: ['bruno']
+        name: 'Bruno Skilled',
+        schemes: ['bruno-skilled']
       }
     ],
     category: 'Development',
